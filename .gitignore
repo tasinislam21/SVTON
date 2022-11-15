@@ -1,0 +1,10 @@
+models/__pycache__
+__pycache__
+*.pptx
+*.ipynb
+result/
+runs/
+checkpoint_phpm/
+checkpoint_gmm/
+checkpoint_tom/
+.idea/
