@@ -220,8 +220,8 @@ for epoch in range(100):
         tryon_sythesis = tanh(tryon_sythesis)
 
         input_pool = G_in
-        real_pool = in_image
-        fake_pool = tryon_sythesis
+        real_pool = img_fore
+        fake_pool = tryon_sythesis * mask_fore
         D_pool = discriminator
 
         pred_fake = discriminate(D_pool, input_pool.detach(), fake_pool.detach())

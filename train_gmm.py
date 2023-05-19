@@ -117,7 +117,7 @@ for epoch in range(50):
 
         input_pool = torch.cat([clothes, mask_clothes, in_skeleton],1)
         real_pool = in_image*mask_clothes
-        fake_pool = fake_c
+        fake_pool = fake_c*mask_clothes
         D_pool = discriminator
 
         loss_D_fake = 0
