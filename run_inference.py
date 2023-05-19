@@ -13,7 +13,7 @@ class Args:
     #dataroot = '../../DeepFashion_Try_On/acgpn_dataset'
     #datapairs = 'short_long.txt'
     dataroot = 'data'
-    datapairs = 'test_pairs.txt'
+    datapairs = 'shuffled_test_pairs.txt'
     phase = 'test'
 opt = Args
 
@@ -97,9 +97,10 @@ tanh = torch.nn.Tanh()
 sigmoid = nn.Sigmoid()
 step = 0
 
-if not os.path.isdir('result'):
-    os.mkdir('result')
+if not os.path.isdir('result_name'):
+    os.mkdir('result_name')
 for data in dataloader:
+    h_name = data['human_name']
     mask_clothes = (data['label'] == 4).float()
     mask_fore = (data['label'] > 0).float()
     img_fore = data['image'] * mask_fore
@@ -171,5 +172,5 @@ for data in dataloader:
     array = tensor.detach().numpy().astype('uint8')
     array = array.swapaxes(0, 1).swapaxes(1, 2)
     image_pil = Image.fromarray(array)
-    image_pil.save("result/image"+str(step)+".jpg")
+    image_pil.save("result_name/"+h_name[0])
     step += 1
