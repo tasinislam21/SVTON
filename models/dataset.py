@@ -79,7 +79,7 @@ class BaseDataset(data.Dataset):
         normal_tensor = self.transform_mask(parse_shape_ori)
         return {'label': label_tensor, 'image': image_tensor,
                 'edge': edge_tensor, 'color': color_tensor,
-                'mask': mask_tensor, 'name': c_name,
+                'mask': mask_tensor, 'name': h_name,
                 'colormask': mask_tensor, 'skeleton': skeleton_tensor,
                 'blurry': mask_tensor, 'normal': normal_tensor}
 

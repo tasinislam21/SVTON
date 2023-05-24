@@ -103,7 +103,7 @@ if get_rank() == 0:
     if not os.path.isdir('checkpoint_gmm'):
         os.mkdir('checkpoint_gmm')
 
-for epoch in range(50):
+for epoch in range(40):
     for data in train_dataloader:
         mask_clothes = (data['label'] == 4).float().cuda()
         in_image = data['image'].cuda()
@@ -113,11 +113,11 @@ for epoch in range(50):
         pre_clothes_mask = (in_edge > 0.5).float().cuda()
         clothes = in_color*pre_clothes_mask
         fake_c, affine = gmm(clothes, mask_clothes, in_skeleton)
-        fake_c = tanh(fake_c)
+        fake_c *= mask_clothes
 
         input_pool = torch.cat([clothes, mask_clothes, in_skeleton],1)
         real_pool = in_image*mask_clothes
-        fake_pool = fake_c*mask_clothes
+        fake_pool = fake_c
         D_pool = discriminator
 
         loss_D_fake = 0
@@ -145,14 +145,14 @@ for epoch in range(50):
         loss_D.backward()
         optimizerD.step()
 
-        if step % 300 == 0 and get_rank() == 0:
+        if step % 500 == 0 and get_rank() == 0:
             writer.add_image('warped_garment', torchvision.utils.make_grid(inv_normalize(fake_c)), step)
             writer.add_image('affine', torchvision.utils.make_grid(clothing_normalize(affine)), step)
             writer.add_image('gt', torchvision.utils.make_grid(inv_normalize(real_pool)), step)
 
         step += 1
-        if step % 20 == 0 and get_rank() == 0:
+        if step % 40 == 0 and get_rank() == 0:
             writer.add_scalar('generator loss', loss_G, step)
             writer.add_scalar('discriminator loss', loss_D, step)
     if get_rank() == 0:
-        torch.save(gmm.state_dict(), "checkpoint_gmm/gmm_"+str(epoch)+".pth")
+        torch.save(gmm.module.state_dict(), "checkpoint_gmm/gmm_"+str(epoch)+".pth")

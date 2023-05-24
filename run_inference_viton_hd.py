@@ -20,8 +20,8 @@ inv_normalize = transforms.Normalize(
 
 class Args:
     batchSize = 1
-    dataroot = 'viton_dataset'
-    datapairs = 'test_pairs.txt'
+    dataroot = 'viton_hd_dataset'
+    datapairs = 'shuffled_test_pairs.txt'
     phase = 'test'
 opt = Args
 
@@ -95,10 +95,21 @@ sigmoid = nn.Sigmoid()
 
 for data in tqdm.tqdm(dataloader):
     h_name = data['name']
-    mask_clothes = (data['label'] == 4).float()
-    mask_fore = (data['label'] > 0).float()
+
+    label = data['label']
+    mask_hair = (label == 2).float() * 1
+    mask_clothes = (label == 5).float() * 4
+    mask_bottom = (label == 9).float() * 8
+    mask_face = (label == 13).float() * 12
+    mask_arm1 = (label == 14).float() * 11
+    mask_arm2 = (label == 15).float() * 13
+    label = (mask_hair + mask_clothes + mask_bottom + mask_face + mask_arm1 + mask_arm2).float()
+
+    mask_clothes = (label == 4).float()
+    mask_fore = (label > 0).float()
+
     img_fore = data['image'] * mask_fore
-    in_label = Variable(data['label'].cuda())
+    in_label = Variable(label.cuda())
     in_edge = Variable(data['edge'].cuda())
     in_img_fore = Variable(img_fore.cuda())
     in_mask_clothes = Variable(mask_clothes.cuda())
@@ -149,4 +160,4 @@ for data in tqdm.tqdm(dataloader):
     fake_image = fake_image.detach().numpy().astype('uint8')
     fake_image = Image.fromarray(fake_image.transpose((1, 2, 0)))
 
-    fake_image.save("viton_result/paired_setting/"+h_name[0])
+    fake_image.save("viton_hd_result/unpaired_setting/"+h_name[0])

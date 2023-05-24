@@ -161,7 +161,7 @@ class PHPM_OLD(nn.Module):
 class TOM(nn.Module):
     def __init__(self, input_nc, output_nc=3):
         super(TOM, self).__init__()
-        nl = nn.InstanceNorm2d
+        nl = nn.BatchNorm2d
         self.conv1 = nn.Sequential(*[nn.Conv2d(input_nc, 64, kernel_size=3, stride=1, padding=1), nl(64), nn.ReLU(),
                                      nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1), nl(64), nn.ReLU()])
         self.pool1 = nn.MaxPool2d(kernel_size=(2, 2))
@@ -176,7 +176,7 @@ class TOM(nn.Module):
         self.pool4 = nn.MaxPool2d(kernel_size=(2, 2))
         self.conv5 = nn.Sequential(*[nn.Conv2d(512, 1024, kernel_size=3, stride=1, padding=1), nl(1024), nn.ReLU(),
                                      nn.Conv2d(1024, 1024, kernel_size=3, stride=1, padding=1), nl(1024), nn.ReLU()])
-        self.drop5 = nn.Dropout(0.5)
+        #self.drop5 = nn.Dropout(0.5)
         self.up6 = nn.Sequential(
             *[nn.UpsamplingNearest2d(scale_factor=2), nn.Conv2d(1024, 512, kernel_size=3, stride=1, padding=1), nl(512),
               nn.ReLU()])
@@ -211,8 +211,8 @@ class TOM(nn.Module):
         conv4 = self.conv4(pool3)
         pool4 = self.pool4(conv4)
         conv5 = self.conv5(pool4)
-        drop5 = self.drop5(conv5)
-        up6 = self.up6(drop5)
+        #drop5 = self.drop5(conv5)
+        up6 = self.up6(conv5)
         conv6 = self.conv6(torch.cat([conv4, up6], 1))
         up7 = self.up7(conv6)
         conv7 = self.conv7(torch.cat([conv3, up7], 1))
@@ -226,7 +226,7 @@ class GMM(nn.Module):
     def __init__(self, input_nc, output_nc=3):
         super(GMM, self).__init__()
         self.stn = Net()
-        nl = nn.InstanceNorm2d
+        nl = nn.BatchNorm2d
         self.conv1 = nn.Sequential(*[nn.Conv2d(input_nc, 64, kernel_size=3, stride=1, padding=1), nl(64), nn.ReLU()])
         self.pool1 = nn.MaxPool2d(kernel_size=(2, 2))
         self.conv2 = nn.Sequential(*[nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1), nl(128), nn.ReLU()])
@@ -235,11 +235,9 @@ class GMM(nn.Module):
         self.pool3 = nn.MaxPool2d(kernel_size=(2, 2))
         self.conv4 = nn.Sequential(*[nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1), nl(512), nn.ReLU(),
                                      nn.Conv2d(512, 512, kernel_size=3, stride=1, padding=1), nl(512), nn.ReLU()])
-        self.drop4 = nn.Dropout(0.5)
         self.pool4 = nn.MaxPool2d(kernel_size=(2, 2))
         self.conv5 = nn.Sequential(*[nn.Conv2d(512, 1024, kernel_size=3, stride=1, padding=1), nl(1024), nn.ReLU(),
                                      nn.Conv2d(1024, 1024, kernel_size=3, stride=1, padding=1), nl(1024), nn.ReLU()])
-        self.drop5 = nn.Dropout(0.5)
 
 # ------------------------------------------------ encoder-decoder split --------------------------------------------------------
 
@@ -273,20 +271,16 @@ class GMM(nn.Module):
         conv3 = self.conv3(pool2)
         pool3 = self.pool3(conv3)
         conv4 = self.conv4(pool3)
-        drop4 = self.drop4(conv4)
-        pool4 = self.pool4(drop4)
+        pool4 = self.pool4(conv4)
         conv5 = self.conv5(pool4)
-        drop5 = self.drop5(conv5)
-        up6 = self.up6(drop5)
-        conv6 = self.conv6(torch.cat([drop4, up6], 1))
+        up6 = self.up6(conv5)
+        conv6 = self.conv6(torch.cat([conv4, up6], 1))
         up7 = self.up7(conv6)
         conv7 = self.conv7(torch.cat([conv3, up7], 1))
         up8 = self.up8(conv7)
         conv8 = self.conv8(torch.cat([conv2, up8], 1))
         up9 = self.up9(conv8)
         conv9 = self.conv9(torch.cat([conv1, up9], 1))
-        # Encoder has 7 convolution layers
-        # Decoder has 10 convolution layers
         return conv9, affine_transformed
 
 class CNN(nn.Module):
@@ -505,9 +499,9 @@ class Discriminator(nn.Module):
         self.n_layers = n_layers
         self.getIntermFeat = getIntermFeat
         nl = nn.BatchNorm2d
-        self.conv1 = nn.Sequential(*[nn.Conv2d(input_nc, 64, kernel_size=4, stride=2, padding=2), nn.LeakyReLU(0.2, True), nn.Dropout(0.80)])
-        self.conv2 = nn.Sequential(*[nn.Conv2d(64, 128, kernel_size=4, stride=2, padding=2), nl(128) , nn.LeakyReLU(0.2, True), nn.Dropout(0.65)])
-        self.conv3 = nn.Sequential(*[nn.Conv2d(128, 256, kernel_size=4, stride=1, padding=2), nl(256) , nn.LeakyReLU(0.2, True), nn.Dropout(0.50)])
+        self.conv1 = nn.Sequential(*[nn.Conv2d(input_nc, 64, kernel_size=4, stride=2, padding=2), nn.LeakyReLU(0.2, True)])
+        self.conv2 = nn.Sequential(*[nn.Conv2d(64, 128, kernel_size=4, stride=2, padding=2), nl(128) , nn.LeakyReLU(0.2, True)])
+        self.conv3 = nn.Sequential(*[nn.Conv2d(128, 256, kernel_size=4, stride=1, padding=2), nl(256) , nn.LeakyReLU(0.2, True)])
         self.conv4 = nn.Sequential(*[nn.Conv2d(256, 1, kernel_size=4, stride=1, padding=2), nn.Sigmoid()])
 
     def forward(self, x):
@@ -518,7 +512,7 @@ class Discriminator(nn.Module):
         return conv4
 
 class GANLoss(nn.Module):
-    def __init__(self, use_lsgan=True, target_real_label=1.0, target_fake_label=0.0,
+    def __init__(self, use_lsgan=True, target_real_label=1, target_fake_label=0,
                  tensor=torch.FloatTensor):
         super(GANLoss, self).__init__()
         self.real_label = target_real_label

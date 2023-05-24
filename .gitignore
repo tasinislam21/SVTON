@@ -8,5 +8,5 @@ checkpoint_phpm/
 checkpoint_gmm/
 checkpoint_tom/
 .idea/
-FID_data/
-ablation/
+*_result/
+*_dataset/

@@ -9,7 +9,7 @@ We have included the pre-trained checkpoint, dataset and results.
 
 ### Prerequisites
 Download the pre-trained checkpoints and dataset: 
-[[Pre-trained checkpoints]](https://www.dropbox.com/s/yveeid5i57jlwut/checkpoints.zip?dl=0) 
+[[Pre-trained checkpoints]](https://www.dropbox.com/s/oz1ypn9aeeblagj/checkpoints.zip?dl=0) 
 [[Dataset]](https://www.dropbox.com/s/8nl54f3uzf5p6zi/SVTON_DATASET.zip?dl=0)
  
 Extract the files and place them in the ```checkpoint``` and ```data``` directory
