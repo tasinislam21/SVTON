@@ -14,3 +14,5 @@ ablation/
 .idea/
 *_result/
 *_dataset/
+ablation_gmm.py
+ablation_phpm.py
