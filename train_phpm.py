@@ -1,5 +1,4 @@
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "4,5,6,7"
 import numpy as np
 import torch
 import torch.nn as nn
@@ -20,20 +19,17 @@ from distributed import (
     synchronize,
 )
 
-class Args:
-    batchSize = 8
-    dataroot = 'data'
-    datapairs = 'train_pairs.txt'
-    phase = 'train'
-    beta1 = 0.5
-opt = Args
-
-
 parser = argparse.ArgumentParser(description="Pose with Style trainer")
 parser.add_argument("--local_rank", type=int, default=0, help="local rank for distributed training")
-args = parser.parse_args()
+parser.add_argument("--batchSize", type=int, default=8)
+parser.add_argument("--dataroot", type=str, default="data")
+parser.add_argument("--datapairs", type=str, default="train_pairs.txt")
+parser.add_argument("--phase", type=str, default="train")
+parser.add_argument("--beta1", type=float, default=0.5)
+opt_train = parser.parse_args()
+
 torch.distributed.init_process_group(backend="nccl", init_method="env://")
-torch.cuda.set_device(args.local_rank)
+torch.cuda.set_device(opt_train.local_rank)
 synchronize()
 
 def data_sampler(dataset, shuffle, distributed):
@@ -44,11 +40,11 @@ def data_sampler(dataset, shuffle, distributed):
     else:
         return data.SequentialSampler(dataset)
 
-train_dataset = dataset.BaseDataset(opt)
+train_dataset = dataset.BaseDataset(opt_train)
 sampler = data_sampler(train_dataset, shuffle=True, distributed=True)
 dataloader = torch.utils.data.DataLoader(
     train_dataset,
-    batch_size=opt.batchSize,
+    batch_size=opt_train.batchSize,
     sampler=sampler,
     shuffle=False)
 
@@ -57,15 +53,13 @@ if get_rank() == 0:
         os.mkdir('checkpoint_phpm')
     writer = SummaryWriter('runs/phpm')
 
-opt_train = Args
-
-G1 = networks.PHPM(7, 4).to(device)
+G1 = networks.PHPM_OLD(7, 4).to(device)
 optimizerG = optim.Adam(G1.parameters(), lr=0.0002, betas=(opt_train.beta1, 0.999))
 
 G1 = nn.parallel.DistributedDataParallel(
         G1,
-        device_ids=[args.local_rank],
-        output_device=args.local_rank,
+        device_ids=[opt_train.local_rank],
+        output_device=opt_train.local_rank,
         broadcast_buffers=False
     )
 

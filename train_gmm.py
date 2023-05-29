@@ -1,5 +1,4 @@
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "4,5,6,7"
 import torch
 import torch.nn as nn
 import torch.utils.data as data
@@ -32,19 +31,17 @@ clothing_normalize = transforms.Normalize(
     std=[1/s for s in std_clothing]
 )
 
-class Args:
-    batchSize = 8
-    dataroot = 'data'
-    datapairs = 'train_pairs.txt'
-    phase = 'train'
-    beta1 = 0.5
-opt_train = Args
-
 parser = argparse.ArgumentParser(description="Pose with Style trainer")
 parser.add_argument("--local_rank", type=int, default=0, help="local rank for distributed training")
-args = parser.parse_args()
+parser.add_argument("--batchSize", type=int, default=8)
+parser.add_argument("--dataroot", type=str, default="data")
+parser.add_argument("--datapairs", type=str, default="train_pairs.txt")
+parser.add_argument("--phase", type=str, default="train")
+parser.add_argument("--beta1", type=float, default=0.5)
+opt_train = parser.parse_args()
+
 torch.distributed.init_process_group(backend="nccl", init_method="env://")
-torch.cuda.set_device(args.local_rank)
+torch.cuda.set_device(opt_train.local_rank)
 synchronize()
 
 def data_sampler(dataset, shuffle, distributed):
@@ -66,23 +63,23 @@ train_dataloader = torch.utils.data.DataLoader(
 if get_rank() == 0:
     writer = SummaryWriter('runs/gmm')
 
-gmm = networks.GMM(7, 3).to(device)
+gmm = networks.GMM_OLD(7, 3).to(device)
 discriminator = networks.Discriminator(10).to(device)
 optimizerG = optim.AdamW(gmm.parameters(), lr=0.0002, betas=(opt_train.beta1, 0.999))
 optimizerD = optim.AdamW(discriminator.parameters(), lr=0.0002, betas=(opt_train.beta1, 0.999))
 
 gmm = nn.parallel.DistributedDataParallel(
         gmm,
-        device_ids=[args.local_rank],
-        output_device=args.local_rank,
+        device_ids=[opt_train.local_rank],
+        output_device=opt_train.local_rank,
         broadcast_buffers=False,
         find_unused_parameters=True
     )
 
 discriminator = nn.parallel.DistributedDataParallel(
         discriminator,
-        device_ids=[args.local_rank],
-        output_device=args.local_rank,
+        device_ids=[opt_train.local_rank],
+        output_device=opt_train.local_rank,
         broadcast_buffers=False
     )
 

@@ -4,11 +4,12 @@ import numpy as np
 import torch.utils.data as data
 import cv2
 import tqdm
-
+import os
 from models import networks, dataset
 from torch.autograd import Variable
 from PIL import Image
 import torchvision.transforms as transforms
+import argparse
 
 mean_candidate = [0.74112587, 0.69617281, 0.68865463]
 std_candidate = [0.2941623, 0.30806473, 0.30613222]
@@ -18,12 +19,12 @@ inv_normalize = transforms.Normalize(
     std=[1/s for s in std_candidate]
 )
 
-class Args:
-    batchSize = 1
-    dataroot = 'viton_dataset'
-    datapairs = 'test_pairs.txt'
-    phase = 'test'
-opt = Args
+parser = argparse.ArgumentParser(description="SVTON arguements")
+parser.add_argument("--batchSize", type=int, default=1)
+parser.add_argument("--dataroot", type=str, default="viton_dataset")
+parser.add_argument("--datapairs", type=str, default="test_pairs.txt")
+parser.add_argument("--phase", type=str, default="test")
+opt = parser.parse_args()
 
 t = dataset.BaseDataset(opt)
 dataloader = torch.utils.data.DataLoader(
@@ -91,8 +92,10 @@ def ger_average_color(mask, arms):
             color[i, 2, :, :] = arms[i, 2, :, :].sum() / count
     return color
 
-sigmoid = nn.Sigmoid()
+if not os.path.isdir('result'):
+    os.mkdir('result')
 
+sigmoid = nn.Sigmoid()
 for data in tqdm.tqdm(dataloader):
     h_name = data['name']
     mask_clothes = (data['label'] == 4).float()
@@ -149,4 +152,4 @@ for data in tqdm.tqdm(dataloader):
     fake_image = fake_image.detach().numpy().astype('uint8')
     fake_image = Image.fromarray(fake_image.transpose((1, 2, 0)))
 
-    fake_image.save("viton_result/paired_setting/"+h_name[0])
+    fake_image.save("result/"+h_name[0])

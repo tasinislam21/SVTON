@@ -7,6 +7,10 @@ runs/
 checkpoint_phpm/
 checkpoint_gmm/
 checkpoint_tom/
+viton_hd_dataset/
+viton_hd_result/
+viton_result/
+ablation/
 .idea/
 *_result/
 *_dataset/
