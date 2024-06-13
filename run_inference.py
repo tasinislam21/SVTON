@@ -120,8 +120,8 @@ for data in tqdm.tqdm(dataloader):
     fake_cl = (armlabel_map == 1).float()
     arm1_mask = (in_label == 11).float()
     arm2_mask = (in_label == 13).float()
-    skin_color = ger_average_color((arm1_mask + arm2_mask - arm2_mask * arm1_mask),
-                (arm1_mask + arm2_mask - arm2_mask * arm1_mask) * in_image)
+    skin_color = ger_average_color((arm1_mask + arm2_mask - arm2_mask * arm1_mask) + face_mask,
+                ((arm1_mask + arm2_mask - arm2_mask * arm1_mask) + face_mask) * in_image)
 
     new_arm1_mask = (armlabel_map == 2).float()
     new_arm2_mask = (armlabel_map == 3).float()
